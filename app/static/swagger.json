@@ -1,0 +1,271 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "PeopleFlow API",
+    "description": "API documentation for PeopleFlow application",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:5000",
+      "description": "Local server"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "schemas": {
+      "User": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "name": { "type": "string" },
+          "email": { "type": "string", "format": "email" },
+          "rol": { "type": "string", "enum": ["user", "admin", "hr"] },
+          "created_at": { "type": "string", "format": "date-time" },
+          "updated_at": { "type": "string", "format": "date-time" }
+        }
+      },
+      "Employer": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "nombre": { "type": "string" },
+          "apellido": { "type": "string" },
+          "email": { "type": "string", "format": "email" },
+          "dni": { "type": "string" },
+          "puesto": { "type": "string" },
+          "salario": { "type": "number", "format": "float" },
+          "fecha_ingreso": { "type": "string", "format": "date-time" },
+          "created_at": { "type": "string", "format": "date-time" },
+          "updated_at": { "type": "string", "format": "date-time" }
+        }
+      }
+    }
+  },
+  "security": [
+    {
+      "bearerAuth": []
+    }
+  ],
+  "paths": {
+    "/api/user/register": {
+      "post": {
+        "summary": "Register a new user",
+        "tags": ["User"],
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": { "type": "string" },
+                  "email": { "type": "string", "format": "email" },
+                  "password": { "type": "string" }
+                },
+                "required": ["name", "email", "password"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "User created successfully" },
+          "400": { "description": "Bad request (missing fields, employer email required, user exists)" }
+        }
+      }
+    },
+    "/api/user/login": {
+      "post": {
+        "summary": "Login user",
+        "tags": ["User"],
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": { "type": "string", "format": "email" },
+                  "password": { "type": "string" }
+                },
+                "required": ["email", "password"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Login successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "access_token": { "type": "string" },
+                    "refresh_token": { "type": "string" }
+                  }
+                }
+              }
+            }
+          },
+          "400": { "description": "Email and password are required" },
+          "401": { "description": "Invalid password" },
+          "404": { "description": "User not found" }
+        }
+      }
+    },
+    "/api/employer/create": {
+      "post": {
+        "summary": "Create a new employer (Admin only)",
+        "tags": ["Employer"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "nombre": { "type": "string" },
+                  "apellido": { "type": "string" },
+                  "email": { "type": "string", "format": "email" },
+                  "dni": { "type": "string" },
+                  "puesto": { "type": "string" },
+                  "salario": { "type": "number" },
+                  "fecha_ingreso": { "type": "string", "format": "date" }
+                },
+                "required": ["nombre", "apellido", "email", "dni", "puesto", "salario", "fecha_ingreso"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Employer created successfully" },
+          "400": { "description": "Missing data" },
+          "403": { "description": "Admin access required" }
+        }
+      }
+    },
+    "/api/employer/get": {
+      "get": {
+        "summary": "Get list of employers with pagination (HR or Admin only)",
+        "tags": ["Employer"],
+        "parameters": [
+          { "in": "query", "name": "page", "schema": { "type": "integer", "default": 1 } },
+          { "in": "query", "name": "per_page", "schema": { "type": "integer", "default": 10 } },
+          { "in": "query", "name": "puesto", "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of employers",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": { "type": "array", "items": { "$ref": "#/components/schemas/Employer" } },
+                    "total": { "type": "integer" },
+                    "pages": { "type": "integer" },
+                    "current_page": { "type": "integer" }
+                  }
+                }
+              }
+            }
+          },
+          "403": { "description": "Access denied" }
+        }
+      }
+    },
+    "/api/employer/get/{id}": {
+      "get": {
+        "summary": "Get employer by ID",
+        "tags": ["Employer"],
+        "parameters": [
+          { "in": "path", "name": "id", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "Employer data",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": { "$ref": "#/components/schemas/Employer" }
+                  }
+                }
+              }
+            }
+          },
+          "403": { "description": "Unauthorized access" },
+          "404": { "description": "Employer not found" }
+        }
+      }
+    },
+    "/api/employer/update/{id}": {
+      "put": {
+        "summary": "Update employer details (HR or Admin only)",
+        "tags": ["Employer"],
+        "parameters": [
+          { "in": "path", "name": "id", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": { "$ref": "#/components/schemas/Employer" }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Employer updated successfully" },
+          "404": { "description": "Employer not found" },
+          "403": { "description": "Access denied" }
+        }
+      }
+    },
+    "/api/employer/delete/{id}": {
+      "delete": {
+        "summary": "Delete employer (Admin only)",
+        "tags": ["Employer"],
+        "parameters": [
+          { "in": "path", "name": "id", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Employer deleted successfully" },
+          "404": { "description": "Employer not found" },
+          "403": { "description": "Admin access required" }
+        }
+      }
+    },
+        "/api/employer/average-salary": {
+      "get": {
+        "summary": "Get average salary (HR or Admin only)",
+        "tags": ["Employer"],
+        "responses": {
+          "200": {
+            "description": "Average salary",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "average_salary": { "type": "number" }
+                  }
+                }
+              }
+            }
+          },
+          "404": { "description": "No employees found" },
+          "403": { "description": "Access denied" }
+        }
+      }
+    }
+  }
+}

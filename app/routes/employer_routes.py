@@ -16,19 +16,22 @@ def create_employer():
     if not data:
         return jsonify({'mensaje': 'Datos requeridos'}), 400
     
-    employer = Employer(
-        nombre=data.get('nombre'),
-        apellido=data.get('apellido'),
-        email=data.get('email'),
-        dni=data.get('dni'),
-        puesto=data.get('puesto'),
-        salario=data.get('salario'),
-        fecha_ingreso=data.get('fecha_ingreso'),
-        created_at=datetime.utcnow(),
-        updated_at=datetime.utcnow()
-    )
-    employer.save()
-    return jsonify({'mensaje': 'Empleado creado exitosamente'}), 201
+    try:
+        employer = Employer(
+            nombre=data.get('nombre'),
+            apellido=data.get('apellido'),
+            email=data.get('email'),
+            dni=data.get('dni'),
+            puesto=data.get('puesto'),
+            salario=data.get('salario'),
+            fecha_ingreso=data.get('fecha_ingreso'),
+            created_at=datetime.utcnow(),
+            updated_at=datetime.utcnow()
+        )
+        employer.save()
+        return jsonify({'mensaje': 'Empleado creado exitosamente'}), 201
+    except Exception as e:
+        return jsonify({'mensaje': 'Error al crear empleado', 'error': str(e)}), 400
 
 @employer_bp.route('/get', methods=['GET'])
 @jwt_required()
@@ -60,22 +63,22 @@ def get_employer():
 def get_employer_by_id(id):
     claims = get_jwt()
     user_role = claims.get('role')
-    # Asumimos que la identidad en el token es el ID del empleado.
     user_id = claims.get('sub')
 
-    # El rol 'usuario' solo puede ver su propia ficha.
     if user_role == 'usuario' and user_id != id:
         return jsonify({'mensaje': 'Acceso no autorizado. Solo puedes ver tu propia ficha.'}), 403
 
-    # Los roles 'admin' y 'rh' pueden ver cualquier ficha.
     if user_role not in ['admin', 'rh', 'usuario']:
         return jsonify({'mensaje': 'Rol no válido para esta operación.'}), 403
 
-    employer = Employer.objects(id=id).first()
-    if not employer:
-        return jsonify({'mensaje': 'Empleado no encontrado'}), 404
-    
-    return jsonify({'mensaje': 'Empleado obtenido exitosamente', 'data': json.loads(employer.to_json())}), 200
+    try:
+        employer = Employer.objects(id=id).first()
+        if not employer:
+            return jsonify({'mensaje': 'Empleado no encontrado'}), 404
+        
+        return jsonify({'mensaje': 'Empleado obtenido exitosamente', 'data': json.loads(employer.to_json())}), 200
+    except Exception as e:
+        return jsonify({'mensaje': 'ID inválido o error al buscar', 'error': str(e)}), 400
 
 @employer_bp.route('/update/<id>', methods=['PUT'])
 @jwt_required()
@@ -84,24 +87,30 @@ def update_employer(id):
     data = request.json
     if not data:
         return jsonify({'mensaje': 'Datos requeridos'}), 400
-    employer = Employer.objects(id=id).first()
-    if not employer:
-        return jsonify({'mensaje': 'Empleado no encontrado'}), 404
-    
-    data['updated_at'] = datetime.utcnow()
-    
-    employer.update(**data)
-    return jsonify({'mensaje': 'Empleado actualizado exitosamente'}), 200
+    try:
+        employer = Employer.objects(id=id).first()
+        if not employer:
+            return jsonify({'mensaje': 'Empleado no encontrado'}), 404
+        
+        data['updated_at'] = datetime.utcnow()
+        
+        employer.update(**data)
+        return jsonify({'mensaje': 'Empleado actualizado exitosamente'}), 200
+    except Exception as e:
+        return jsonify({'mensaje': 'Error al actualizar empleado', 'error': str(e)}), 400
 
 @employer_bp.route('/delete/<id>', methods=['DELETE'])
 @jwt_required()
 @admin_required
 def delete_employer(id):
-    employer = Employer.objects(id=id).first()
-    if not employer:
-        return jsonify({'mensaje': 'Empleado no encontrado'}), 404
-    employer.delete()
-    return jsonify({'mensaje': 'Empleado eliminado exitosamente'}), 200
+    try:
+        employer = Employer.objects(id=id).first()
+        if not employer:
+            return jsonify({'mensaje': 'Empleado no encontrado'}), 404
+        employer.delete()
+        return jsonify({'mensaje': 'Empleado eliminado exitosamente'}), 200
+    except Exception as e:
+        return jsonify({'mensaje': 'Error al eliminar empleado', 'error': str(e)}), 400
 
 @employer_bp.route('/average-salary', methods=['GET'])
 @jwt_required()
@@ -120,16 +129,14 @@ def get_average_salary():
         result = list(Employer.objects.aggregate(*pipeline))
 
         if not result:
-            return jsonify({'message': 'No employees found'}), 404
+            return jsonify({'mensaje': 'No se encontraron empleados'}), 404
 
         data = result[0]
         total_salary = data.get('total_salary', 0)
         total_employees = data.get('total_employees', 1)
 
-        # Se asume que el salario guardado es mensual.
-        # Para obtener el promedio semanal, se divide el salario promedio mensual por 4.
         average_salary = (total_salary / total_employees) / 4
-        return jsonify({'average_salary': average_salary}), 200
+        return jsonify({'salario_promedio': average_salary}), 200
 
     except Exception as e:
-        return jsonify({'message': 'An error occurred', 'error': str(e)}), 500
+        return jsonify({'mensaje': 'Ocurrió un error', 'error': str(e)}), 500

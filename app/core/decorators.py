@@ -3,10 +3,6 @@ from flask import jsonify
 from flask_jwt_extended import get_jwt
 
 def role_required(required_roles):
-    """
-    Decorador para verificar que el usuario tiene uno de los roles requeridos.
-    Los roles se extraen del claim 'role' en el token JWT.
-    """
     def decorator(fn):
         @wraps(fn)
         def wrapper(*args, **kwargs):
@@ -20,7 +16,6 @@ def role_required(required_roles):
         return wrapper
     return decorator
 
-# Decoradores específicos para simplificar
 admin_required = role_required(['admin'])
 rh_or_admin_required = role_required(['admin', 'rh'])
 user_rh_or_admin_required = role_required(['admin', 'rh', 'usuario'])
