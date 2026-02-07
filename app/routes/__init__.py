@@ -13,6 +13,8 @@ def create_app():
     )
 
     from app.routes.user_routes import user_bp
-    app.register_blueprint(user_bp)
+    from app.routes.employer_routes import employer_bp
 
+    app.register_blueprint(user_bp)
+    app.register_blueprint(employer_bp)
     return app
