@@ -18,5 +18,4 @@ class User(Document):
         if not document.password.startswith("pbkdf2:sha256") and not document.password.startswith("scrypt:"):
             document.password = generate_password_hash(document.password)
 
-# ¡Conectar la señal después de definir la clase!
 signals.pre_save.connect(User.pre_save, sender=User)
