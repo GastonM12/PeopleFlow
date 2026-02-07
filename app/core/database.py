@@ -1,20 +1,11 @@
-from pymongo import MongoClient , errors
+from mongoengine import connect
 from app.config import DevelopmentConfig
-
-
-client = None
-db = None
-
+from pymongo import errors
 
 def init_db():
-    global client, db
-
     try:
-        client = MongoClient(DevelopmentConfig.MONGO_URI)
-        db = client.get_database()
-        print(" Conexion a Mongo establecida")
-
-    except errors.ConnectionError as e : 
-        print("Error de conexion a Mongo", e)
-        raise e
-    
+        connect(host=DevelopmentConfig.MONGO_URI)
+        print("Conexión a MongoEngine establecida")
+    except errors.ConnectionFailure as e:
+        print(f"Error de conexión a MongoEngine: {e}")
+        raise
