@@ -1,0 +1,25 @@
+services:
+  api:
+    build: .
+    container_name: peopleflow-api
+    ports:
+      - "5000:5000"
+    env_file:
+      - .env
+    depends_on:
+      - mongo
+    volumes:
+      - .:/app
+
+  mongo:
+    image: mongo:6
+    container_name: peopleflow-mongo
+    ports:
+      - "27018:27017"   # Mapeamos puerto local 27018 a 27017 dentro del contenedor
+    volumes:
+      - mongo_data:/data/db
+    environment:
+      MONGO_INITDB_DATABASE: peopleflow
+
+volumes:
+  mongo_data:
