@@ -90,6 +90,16 @@ Después de levantar los contenedores, si necesitas ejecutar migraciones de dato
     ```
 Esto es necesario para que los scripts reconozcan la estructura de directorios de la aplicación.
 
+### Usuarios de Prueba
+
+Una vez ejecutadas las migraciones, puedes utilizar las siguientes credenciales para probar los diferentes roles:
+
+| Nombre | Email | Contraseña | Rol |
+| :--- | :--- | :--- | :--- |
+| **nacho** | `admin@admin.com` | `supersecretpassword` | `admin` |
+| **Recursos Humanos** | `rh@example.com` | `password123` | `hr` |
+| **Juan Pérez** | `juan.perez@example.com` | `password123` | `user` |
+
 ## Endpoints de la API
 
 A continuación se muestra un resumen de los endpoints disponibles.
